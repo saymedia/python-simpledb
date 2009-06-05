@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) != 2:
         print 'Usage: python sdbdump.py <domain>'
-        sys.exit()
+        sys.exit(1)
 
     sdb = simpledb.SimpleDB(settings.AWS_KEY, settings.AWS_SECRET)
 

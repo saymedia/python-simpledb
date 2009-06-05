@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) != 3:
         print 'Usage: python sdbcopy.py from_domain to_domain'
-        sys.exit()
+        sys.exit(1)
 
     sdb = simpledb.SimpleDB(settings.AWS_KEY, settings.AWS_SECRET)
 

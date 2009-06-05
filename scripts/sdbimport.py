@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) != 3:
         print 'Usage: python sdbimport.py <domain> <json_file>'
-        sys.exit()
+        sys.exit(1)
 
 
     print "Loading..."
