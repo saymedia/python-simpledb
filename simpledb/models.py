@@ -249,7 +249,7 @@ class ModelMetaclass(type):
             # a simpledb.Domain instance.
             if isinstance(new_cls.Meta.domain, basestring):
                 new_cls.Meta.domain = simpledb.Domain(new_cls.Meta.domain, new_cls.Meta.connection)
-            # Install a reference to the new model class on the Meta.domain so it
+            # Install a reference to the new model class on the Meta.domain so
             # Query can use it.
             # TODO: Should we be using weakref here? Not sure it matters since it's 
             # a class (global) that's long lived anyways.
