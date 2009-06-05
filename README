@@ -7,7 +7,7 @@ Amazon SimpleDB <http://aws.amazon.com/simpledb/> is "a web service providing th
 database functions of data indexing and querying." It is a schemaless persistent data
 store that is accessed via a simple HTTP API.
 
-To get started you'll need to instantiage an instance of the SimpleDB class, passing
+To get started you'll need to instantiate an instance of the SimpleDB class, passing
 in your AWS key and secret (your access identifiers, available at http://aws.amazon.com).
 
     >>> sdb = SimpleDB(<AWS KEY>, <AWS SECRET>)
