@@ -1,0 +1,225 @@
+Python SimpleDB Client and API SDK
+==================================
+
+Python library for accessing Amazon SimpleDB API Version 2009-04-15.
+
+Amazon SimpleDB <http://aws.amazon.com/simpledb/> is "a web service providing the core
+database functions of data indexing and querying." It is a schemaless persistent data
+store that is accessed via a simple HTTP API.
+
+To get started you'll need to instantiage an instance of the SimpleDB class, passing
+in your AWS key and secret (your access identifiers, available at http://aws.amazon.com).
+
+    >>> sdb = SimpleDB(<AWS KEY>, <AWS SECRET>)
+
+Your Amazon SimpleDB account can have zero or more domains, which are discrete partitions
+that contain your data. If you have a small, homogenous data set you may choose to use
+a single domain. If you have a large data set with varying data types that are easily
+partitionable you may choose to use multiple domains, which may improve performance.
+
+You can create a domain by calling SimpleDB's create_domain method. Note that this 
+operation may take 10 or more seconds to complete.
+
+    >>> users = sdb.create_domain('users')
+
+You may access an existing domain by using dictionary syntax on a SimpleDB instance,
+which implements a subset of the python dictionary API. You can also use a SimpleDB
+instance to iterate over your domains.
+
+    >>> domain1 = sdb['domain1']
+    >>> ', '.join(domain.name for domain in sdb)
+    'domain1, domain2, foo, test, users'
+
+SimpleDB Domains are represented by instances of simpledb.Domain. Once again, you
+can use dictionary syntax to reference items stored in SimpleDB.
+
+    >>> users = sdb['users']
+    >>> users['mmalone']
+    {'age': '24', 'name': 'Mike', 'location': 'San Francisco, CA'}
+
+Item's are represented by instances of simpledb.Item. Note that your data will not
+be persisted to SimpleDB until you call the Item's save method.
+
+    >>> user = users['mmalone']
+    >>> user['age'] = '25'
+    >>> user.save()
+
+You can also assign a dictionary directly to an item in a domain, which will
+automatically create and save a simpledb.Item instance.
+
+    >>> users['rcrowley'] = {'name': 'Richard', 'age': '24', 'location': 'San Francisco, CA'}
+    >>> users['rcrowley']
+    {'age': '24', 'name': 'Richard', 'location': 'San Francisco, CA'}
+
+You can delete items, keys, or entire domains using del.
+
+    >>> del users['rcrowley']['location']
+    >>> users['rcrowley']
+    {'age': '24', 'name': 'Richard'}
+    >>> del users['rcrowley']
+    >>> users['rcrowley']
+    {}
+    >>> sdb['users']
+    <Domain: users>
+    >>> del sdb['users']
+    >>> sdb['users']['mmalone']
+    Traceback (most recent call last):
+        ...
+      File "simpledb.py", line 198, in make_request
+         raise SimpleDBError(error.find('Message').text)
+    simpledb.SimpleDBError: The specified domain does not exist.
+
+
+== Querying ==
+
+The simpledb.Domain select operation returns a list of sipmledb.Item instances
+that match the select expression. See Amazon's documentation for details re: the
+Select expression syntax.
+
+    >>> users.select("SELECT name FROM users WHERE name LIKE 'Kim%'")
+    [{'name': 'Kim'}, {'name': 'Kimberlee'}, {'name': 'Kimberley'}, {'name': 'Kimberly'}]
+
+A more Pythonic query interface is available via the filter method. The filter
+method returns a simpledb.Query object that lazily evaluates your query. Thus,
+you can construct a query incrementally and pass Query objects around in your code
+efficiently.
+
+    >>> users.filter(name__like='Kim%').values('name')
+    [{'name': 'Kim'}, {'name': 'Kimberlee'}, {'name': 'Kimberley'}, {'name': 'Kimberly'}]
+
+Query's are evaluated when you perform any of the following operations on them:
+    
+    * Iteration
+    * Slicing
+    * repr()
+    * len()
+    * list()
+
+Most Query methods return a new Query, allowing you to chain operations. The 
+following methods return a new Query object:
+
+    * filter(*args, **kwargs): Returns a new Query containing objects that match
+      the given lookup parameters. Attribute lookup syntax is described below.
+    * values(*attributes): Returns a new Query that restricts the set of attributes
+      that will be retrieved.
+    * item_names(): Returns a new Query that returns a list of Item names.
+    * order_by(attribute): Returns a new Query that has been modified to order
+      the results by the specified attribute. If the attribute name has a '-' 
+      prefix, the results will be in descending order.
+    * all(): Returns a copy of the current Query. This is useful if you want to
+      be able to pass a Domain or a Query object into a function. You can safely
+      call the all() method on either object.
+    * count(): Returns a count of the number of objects that match the query. If
+      the Query has not been evaluated, a COUNT(*) operation is performed on the 
+      database. Otherwise the length of the result set is returned.
+
+
+== Attribute Lookups ==
+
+Attribute lookups are how you construct the WHERE clause of your expression. They're
+specified as keyword arguments to the Query method filter() and to simpledb.where,
+simpledb.every, and simpledb.item_name clauses, which are described later.
+
+    * EQ: Exact match. If the value provided for comparison is None, it will be
+      interpreted as NULL. This is the default lookup type, so if you leave the type
+      off an equals statement will be constructed.
+
+      >>> users.filter(name__eq='Kim')
+      >>> users.filter(location=None)
+
+    * NOTEQ: The attribute is not equal to the value provided for comparison. If
+      the value provided for comparison is None, it will be interpreted as NULL.
+
+      >>> users.filter(name__noteq='Mike')
+      >>> users.filter(location__noteq=None)
+
+    * GT: Greater than. Note that all comparisons are done lexicographically, so
+      you'll need to pad numbers and offset negatives for proper comparison, and
+      convert dates to a format that sorts lexicographically like ISO 8601. 
+      
+      >>> users.filter(age__gt='24')
+
+    * LT: Less than.
+      
+      >>> users.filter(age__lt='50')
+
+    * GTE: Greater than or equal to.
+    * LTE: Less than or equal to.
+
+    * LIKE: Attribute value contains the specified value. The like operator can be
+      used to evaluate the start of a string ('string%'), the end of the string
+      ('%string'), or any part of a string ('%string%').
+
+      >>> users.filter(location__like='San%')
+
+    * NOTLIKE: Attribute value does not contain the specified value.
+
+    * BTWN: Attribute value falls within the specified range.
+      
+      >>> users.filter(age__btwn=('20','30'))
+
+    * IN: Attribute value is equal to one of the specified values.
+      
+      >>> users.filter(name__in=('Mike', 'Michael')) 
+
+== Advanced Lookups ==
+
+By default, all filter operations are combined with the AND keyword, producing an
+increasingly refined result set. If you need to combine multiple where clauses with 
+an OR connector, you can manually constuct `where` clauses and logically combine them
+using the `&` and `|` operators, then pass them directly to the filter method:
+
+    >>> users.filter(simpledb.where(age='24') | simpledb.where(age='25'))
+
+SimpleDB allows an Attribute to have multiple values, and if any one of the attribute
+values matches your query, that attribute will be included in the result set. If you
+want _every_ attribute to match your query, you can use an `every` clause:
+
+    >>> users.filter(simpledb.every(location='San Francisco, CA'))
+
+Finally, you can query items based on their names by using an `item_name` clause. Note
+that with item_name clauses the keyword arguments do not include an attribute name,
+only the lookup type:
+
+    >>> users.filter(simpledb.item_name(like='%malone'))
+    >>> users.filter(simpledb.item_name('mmalone'))
+    >>> users.filter(simpledb.item_name(btwn=('a', 'b')))
+
+
+== Models ==
+
+Models give you a higher level API for interacting with SimpleDB. Instead of directly
+querying the database, you subclass `models.Model` and add one or more `models.Field`
+attributes.
+
+In Python, model fields will appear as ordinary Python objects. When stored in SimpleDB,
+the field values are encoded and stored as UTF8 strings. Care is taken to convert the
+Python values into strings that are lexicographically sortable and behave sensibly when
+querying SimpleDB.
+
+A Model must have one NameField attribute. This field's value will be used as the item's
+name in SimpleDB.
+
+A Model must have a Meta class with two attributes:
+    `connection`: specifies the SimpleDB connection for the Model
+    `domain`: specifes the domain the Model is stored in
+
+A simple User model might look like this:
+    
+    class User(models.Model):
+        username = models.Field(name=True)
+        name = models.Field()
+        birth_date = models.DateTimeField()
+        net_worth = models.NumberField(padding=10, precision=2, offset=1000000000)
+
+        class Meta:
+            connection = simpledb.SimpleDB(settings.AWS_KEY, settings.AWS_SECRET)
+            domain = 'new_users'
+
+You query models via their Manager object which, by default, will be attached to the Model's
+`objects` attribute. The Query syntax is the same as that provided by the simpledb
+module, but your result set will consist of instances of your Model class, with attribute
+values appropriately decoded to Python objects.
+
+    >>> Person.objects.filter(age__gt=20)
+    >>> Person.objects.get('mmalone')
