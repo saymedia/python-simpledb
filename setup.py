@@ -8,7 +8,7 @@ setup(
     long_description = open(os.path.join(os.path.dirname(__file__), 'README')).read(),
     author='Michael Malone',
     author_email='mjmalone@gmail.com',
-    url='http://github.com/mmalone/python-simpledb',
+    url='http://github.com/sixapart/python-simpledb',
 
     packages=['simpledb'],
     provides=['simpledb'],
