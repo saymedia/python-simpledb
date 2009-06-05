@@ -123,7 +123,7 @@ class FieldEncoder(simpledb.AttributeEncoder):
 
 class Query(simpledb.Query):
     def values(self, *fields):
-        # If you ask for specific values return a dict instead of the Model
+        # If you ask for specific values return a simpledb.Item instead of the Model
         q = self._clone(klass=simpledb.Query)
         q.fields = fields
         return q
@@ -213,7 +213,7 @@ class ModelMetaclass(type):
         new_fields = {}
         managers = {}
 
-        # Move all the class's attributes taht are Fields to the fields set.
+        # Move all the class's attributes that are Fields to the fields set.
         for attrname, field in attrs.items():
             if isinstance(field, Field):
                 new_fields[attrname] = field
