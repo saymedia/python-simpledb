@@ -269,13 +269,13 @@ class SimpleDBTests(TransactionTestCase):
         self.assertEquals(len(set(i.name for i in users) - set(under_25)), 0)
 
     def test_multiple_values(self):
-        katie = self.sdb['test_uers']['katie']
+        katie = self.sdb['test_users']['katie']
         locations = ['San Francisco, CA', 'Centreville, VA']
         katie['location'] = locations
         katie.save()
-        katie = self.sdb['test_uers']['katie']
-        self.assertTrue(location[0] in katie['location'])
-        self.assertTrue(location[1] in katie['location'])
+        katie = self.sdb['test_users']['katie']
+        self.assertTrue(locations[0] in katie['location'])
+        self.assertTrue(locations[1] in katie['location'])
         self.assertTrue(len(katie['location']), 2)
 
 
