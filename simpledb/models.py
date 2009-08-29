@@ -173,7 +173,6 @@ class Manager(object):
         return self._get_query().item_names()
 
     def get(self, name):
-        field = self.model.fields[self.model._name_field]
         return self.model.from_item(self.model.Meta.domain.get(name))
 
     def _get_query(self):
