@@ -197,7 +197,7 @@ the field values are encoded and stored as UTF8 strings. Care is taken to conver
 Python values into strings that are lexicographically sortable and behave sensibly when
 querying SimpleDB.
 
-A Model must have one NameField attribute. This field's value will be used as the item's
+A Model must have one ItemName attribute. This field's value will be used as the item's
 name in SimpleDB.
 
 A Model must have a Meta class with two attributes:
@@ -207,7 +207,7 @@ A Model must have a Meta class with two attributes:
 A simple User model might look like this:
     
     class User(models.Model):
-        username = models.Field(name=True)
+        username = models.ItemName()
         name = models.Field()
         birth_date = models.DateTimeField()
         net_worth = models.NumberField(padding=10, precision=2, offset=1000000000)
