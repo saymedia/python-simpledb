@@ -11,7 +11,7 @@ except ImportError:
 from UserDict import DictMixin
 
 
-__all__ = ['SimpleDB', 'Domain', 'Item', 'AttributeEncoder', 'where', 'every', 'item_name']
+__all__ = ['SimpleDB', 'Domain', 'Item', 'AttributeEncoder', 'where', 'every', 'item_name', 'SimpleDBError', 'ItemDoesNotExist']
 
 
 QUERY_OPERATORS = {
