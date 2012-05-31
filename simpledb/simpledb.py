@@ -969,7 +969,7 @@ class Domain(object):
 class Item(DictMixin):
     @classmethod
     def load(cls, simpledb, domain, name, consistent_read=False):
-        attrs = simpledb.get_attributes(domain, name)
+        attrs = simpledb.get_attributes(domain, name, consistent_read)
         return cls(simpledb, domain, name, attrs)
 
     def __init__(self, simpledb, domain, name, attributes=None):
