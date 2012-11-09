@@ -660,13 +660,11 @@ class where(object):
                                     operation, self._quote(value))
 
     def _make_eq_condition(self, attribute, operation, value, encoder):
-        value = encoder(attribute, value)
         if value is None:
             return '%s IS NULL' % attribute
         return self._make_condition(attribute, operation, value, encoder)
 
     def _make_noteq_condition(self, attribute, operation, value, encoder):
-        value = encoder(attribute, value)
         if value is None:
             return '%s IS NOT NULL' % attribute
         return self._make_condition(attribute, operation, value, encoder)
