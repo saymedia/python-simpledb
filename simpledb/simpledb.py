@@ -478,7 +478,7 @@ class SimpleDB(object):
         request = Request("POST", self._sdb_url(), data)
         self._make_request(request)
 
-    def get_attributes(self, domain, item, attributes=None):
+    def get_attributes(self, domain, item, attributes=None, consistent_read=False):
         """
         Returns all of the attributes associated with the item.
         
@@ -501,6 +501,9 @@ class SimpleDB(object):
             'DomainName': domain,
             'ItemName': item,
         }
+        if consistent_read:
+            data.update(ConsistentRead='true')
+
         if attributes:
             for i, attr in enumerate(attributes):
                 data['AttributeName.%s' % i] = attr
@@ -657,13 +660,11 @@ class where(object):
                                     operation, self._quote(value))
 
     def _make_eq_condition(self, attribute, operation, value, encoder):
-        value = encoder(attribute, value)
         if value is None:
             return '%s IS NULL' % attribute
         return self._make_condition(attribute, operation, value, encoder)
 
     def _make_noteq_condition(self, attribute, operation, value, encoder):
-        value = encoder(attribute, value)
         if value is None:
             return '%s IS NOT NULL' % attribute
         return self._make_condition(attribute, operation, value, encoder)
@@ -920,10 +921,15 @@ class Domain(object):
     def item_names(self):
         return self._get_query().item_names()
 
-    def get(self, name):
+    def get(self, name, consistent_read=False):
+        """
         if name not in self.items:
-            self.items[name] = Item.load(self.simpledb, self, name)
+            self.items[name] = Item.load(self.simpledb, self, name, consistent_read)
         item = self.items[name]
+        """
+
+        item = Item.load(self.simpledb, self, name, consistent_read)
+
         if not item:
             raise ItemDoesNotExist(name)
         return item
@@ -965,8 +971,9 @@ class Domain(object):
 
 class Item(DictMixin):
     @classmethod
-    def load(cls, simpledb, domain, name):
-        attrs = simpledb.get_attributes(domain, name)
+    def load(cls, simpledb, domain, name, consistent_read=False):
+        attrs = simpledb.get_attributes(domain, name,
+                consistent_read=consistent_read)
         return cls(simpledb, domain, name, attrs)
 
     def __init__(self, simpledb, domain, name, attributes=None):

@@ -172,8 +172,9 @@ class Manager(object):
     def item_names(self):
         return self._get_query().item_names()
 
-    def get(self, name):
-        return self.model.from_item(self.model.Meta.domain.get(name))
+    def get(self, name, consistent_read=False):
+        return self.model.from_item(self.model.Meta.domain.get(name,
+            consistent_read))
 
     def _get_query(self):
         return Query(self.model.Meta.domain)
