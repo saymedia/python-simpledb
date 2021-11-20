@@ -19,7 +19,7 @@ QUERY_OPERATORS = {
     # attr__eq = None, attr__noteq = None, and every(), respectively.
     'eq': '=',              # equals
     'noteq': '!=',          # not equals
-    'gt': '>',              # greather than
+    'gt': '>',              # greater than
     'gte': '>=',            # greater than or equals
     'lt': '<',              # less than
     'lte': '<=',            # less than or equals
@@ -134,7 +134,7 @@ class Request(object):
 
     def get_normalized_parameters(self):
         """
-        Returns a list constisting of all the parameters required in the
+        Returns a list consisting of all the parameters required in the
         signature in the proper order.
 
         """
